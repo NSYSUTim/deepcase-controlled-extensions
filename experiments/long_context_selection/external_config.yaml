@@ -1,0 +1,56 @@
+status: frozen_after_ait_confirmation_failure_before_anchor_outcomes_or_hdfs_download
+created_date: 2026-09-06
+
+method:
+  name: anchor5_assoc5
+  candidate_pool: 100
+  context_positions: 10
+  unconditional_newest_anchors: 5
+  association_selected_older_positions: 5
+  association_fit: target_event_x_candidate_event_x_recency_band_log_odds
+  retrieval_uses_test_labels: false
+
+ait_development:
+  scenarios: [fox, russellmitchell]
+  model_seeds: [1729, 2718, 31415]
+  baseline_point: [0.10, 0.20]
+  advance_requires_positive_mean_recall_gain_each: true
+  maximum_pooled_false_escalation_relative_increase: 0.05
+
+hdfs:
+  source_repository: https://github.com/wuyifan18/DeepLog/tree/master/data
+  files: [hdfs_train, hdfs_test_normal, hdfs_test_abnormal]
+  duplicate_safe_partition: sha256_exact_line_modulo_10
+  development_buckets: [0, 1, 2, 3]
+  validation_buckets: [4, 5]
+  final_test_buckets: [6, 7, 8, 9]
+  official_train_role: normal_training_only
+  labels: {hdfs_test_normal: 0, hdfs_test_abnormal: 1}
+  sequence_boundary: one_input_line
+  candidate_scope: preceding_events_in_same_sequence
+  timestamps_available: false
+  model_seeds: [1729, 2718, 31415]
+
+operating_point:
+  grid:
+    - [0.10, 0.01]
+    - [0.10, 0.20]
+    - [0.30, 0.05]
+    - [0.30, 0.20]
+    - [0.50, 0.01]
+    - [0.50, 0.10]
+    - [1.00, 0.01]
+  baseline_point: [0.10, 0.20]
+  selector_safety_filter: validation_false_escalation_not_above_1.05_times_baseline
+  among_safe_points: closest_final_unlabeled_workload_then_lower_workload_then_grid_order
+  no_safe_point: method_fails_for_that_seed
+
+external_success:
+  primary_metric: strict_automatic_anomaly_recall
+  paired_group_bootstrap_iterations: 20000
+  bootstrap_seed: 260906
+  recall_gain_ci_lower_must_exceed_zero: true
+  maximum_pooled_false_escalation_relative_increase: 0.05
+  context_positions: 10
+  all_final_sequences_used: true
+  hdfs_does_not_validate_time_window: true

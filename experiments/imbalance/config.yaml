@@ -1,0 +1,109 @@
+data:
+  official_csv_dir: dataset/reference/alerts_csv/alerts_csv
+  legacy_csv: dataset/processed/ait_ads_deepcase.csv
+  canonical_parquet: dataset/processed/ait_ads_canonical.parquet
+  contexts_npz: dataset/processed/ait_ads_contexts_strict_past.npz
+  manifest_json: dataset/processed/ait_ads_manifest.json
+  context_length: 10
+  timeout_seconds: 86400
+  primary_label: event_incident
+  sensitivity_label: window_incident
+
+design:
+  scenarios:
+    - fox
+    - harrison
+    - russellmitchell
+    - santos
+    - shaw
+    - wardbeck
+    - wheeler
+    - wilson
+  label_budget: 100000
+  imbalance_ratios: [10, 100, 1000]
+  seeds: [1729, 2718, 31415]
+  workload_budgets: [0.001, 0.005, 0.01, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.75, 1.00]
+  methods:
+    - rule_prior
+    - deepcase
+    - aux_bce
+    - aux_weighted_bce
+    - aux_focal
+    - aux_group_balanced_bce
+    - proposed
+  # Fixed budgets are sensitivity analyses.  The primary comparison matches
+  # each method to the workload produced by DeepCASE's original defaults in
+  # the same unlabeled test stream.
+  primary_workload_policy: deepcase_default_matched
+  primary_reference:
+    method: deepcase
+    eps: 0.10
+    threshold: 0.20
+  design_scenarios: [russellmitchell, fox]
+  confirmatory_scenarios: [harrison, santos, shaw, wardbeck, wheeler, wilson]
+  ambiguous_rule_diagnostic:
+    rule_column: event_key
+    lower_incident_rate: 0.05
+    upper_incident_rate: 0.95
+    minimum_per_class: 50
+
+model:
+  hidden_size: 64
+  # Frozen from loss convergence on design scenarios before confirmatory runs.
+  epochs: 3
+  steps_per_epoch: 500
+  batch_size: 512
+  learning_rate: 0.003
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+  incident_lambda: 0.5
+  focal_gamma: 2.0
+  effective_beta: 0.9999
+  context_dropout: 0.0
+
+interpreter:
+  # Pilot covers the full legal L1 range far enough to determine whether the
+  # pre-registered workload budgets are attainable before confirmatory runs.
+  pilot_eps_grid: [0.10, 0.30, 0.50, 1.00]
+  pilot_threshold_grid: [0.01, 0.05, 0.10, 0.20]
+  eps_grid: [0.10, 0.30, 0.50, 1.00]
+  threshold_grid: [0.01, 0.05, 0.10, 0.20]
+  full_settings:
+    - [0.10, 0.01]
+    - [0.10, 0.20]
+    - [0.30, 0.05]
+    - [0.30, 0.20]
+    - [0.50, 0.01]
+    - [0.50, 0.10]
+    - [1.00, 0.01]
+  min_samples: 5
+  query_iterations: 0
+  query_iterations_sensitivity: [0, 10, 100]
+  max_multiplicity_for_fit: 5
+
+# Development-only feasibility protocol for the replacement RC-CR method.
+# AIT-ADS has already been inspected and therefore cannot provide a new
+# confirmatory claim; these settings only decide whether implementation work
+# should proceed before an untouched external evaluation is registered.
+rccr:
+  imbalance_ratio: 1000
+  design_seeds: [1729]
+  identifiability:
+    minimum_full_per_class: 50
+    minimum_revealed_per_class: 1
+    lower_full_incident_rate: 0.05
+    upper_full_incident_rate: 0.95
+    minimum_pairable_rules: 2
+    minimum_pairable_positive_groups: 2
+  feasibility:
+    minimum_recall_gain: 0.01
+    require_nonnegative_each_design_scenario: true
+    query_iterations: 100
+    objectives: [context_bce, rule_context_bce, within_rule_pairwise]
+    epochs: 20
+    steps_per_epoch: 50
+    batch_size: 256
+    learning_rate: 0.03
+    weight_decay_grid: [0.001, 0.01, 0.1]
+    rule_prior_alpha: 1.0
+    tie_break_seed: 880301

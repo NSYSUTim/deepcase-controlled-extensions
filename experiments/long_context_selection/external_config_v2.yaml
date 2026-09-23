@@ -1,0 +1,77 @@
+status: hdfs_external_protocol_frozen_after_ait_development_before_hdfs_download
+created_date: 2026-09-06
+
+method:
+  name: anchor5_assoc5
+  candidate_pool: 100
+  context_positions: 10
+  unconditional_newest_anchors: 5
+  association_selected_older_positions: 5
+  association_fit: target_event_x_candidate_event_x_recency_band_log_odds
+  retrieval_uses_final_labels: false
+
+ait_development_receipt: context_selection_experiment/results/anchor_design_decision.json
+
+hdfs:
+  files:
+    hdfs_train: https://raw.githubusercontent.com/wuyifan18/DeepLog/master/data/hdfs_train
+    hdfs_test_normal: https://raw.githubusercontent.com/wuyifan18/DeepLog/master/data/hdfs_test_normal
+    hdfs_test_abnormal: https://raw.githubusercontent.com/wuyifan18/DeepLog/master/data/hdfs_test_abnormal
+  duplicate_safe_partition: sha256_line_without_newline_modulo_10
+  development_buckets: [0, 1, 2, 3]
+  validation_buckets: [4, 5]
+  final_test_buckets: [6, 7, 8, 9]
+  official_test_duplicate_policy: identical_lines_share_hash_partition
+  official_train_pattern_overlap: report_and_secondary_exclusion_sensitivity
+  contradictory_identical_test_patterns: retain_report_and_keep_in_one_partition
+  source_labels: {hdfs_train: 0, hdfs_test_normal: 0, hdfs_test_abnormal: 1}
+  official_train_role: normal_training_only
+  sequence_boundary: one_input_line
+  candidate_scope: preceding_events_in_same_sequence
+  timestamps_available: false
+
+association_teacher:
+  recency_rank_bands:
+    - [1, 10]
+    - [11, 20]
+    - [21, 50]
+    - [51, 100]
+  bernoulli_smoothing: 1.0
+  maximum_absolute_log_odds: 6.0
+  fit_batch_rows: 10000
+  selection_batch_rows: 50000
+
+model:
+  hidden_size: 64
+  epochs: 3
+  steps_per_epoch: 500
+  batch_size: 512
+  learning_rate: 0.003
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+
+interpreter:
+  min_samples: 5
+  max_multiplicity_for_fit: 5
+  default_eps: 0.10
+  default_threshold: 0.20
+  settings:
+    - [0.10, 0.01]
+    - [0.10, 0.20]
+    - [0.30, 0.05]
+    - [0.30, 0.20]
+    - [0.50, 0.01]
+    - [0.50, 0.10]
+    - [1.00, 0.01]
+
+evaluation:
+  model_seeds: [1729, 2718, 31415]
+  safety_switch_rate_per_1000: 1.0
+  low_rate_absolute_margin_per_1000: 1.0
+  high_rate_relative_margin: 0.05
+  bootstrap_iterations: 20000
+  bootstrap_seed: 260906
+  recall_gain_ci_lower_must_exceed_zero: true
+  false_escalation_noninferiority_ci_upper_must_not_exceed_margin: true
+  exact_context_positions: 10
+  use_all_final_sequences: true

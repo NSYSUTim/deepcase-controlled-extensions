@@ -1,0 +1,19 @@
+{
+  "method_name": "hierarchical_context",
+  "display_name": "Adaptive Hierarchical-Context DeepCASE",
+  "variant_name": "gru-short-long-memory-report",
+  "baseline_config": "configs/deepcase_ait_ads_cpu.json",
+  "baseline_run_id": "2026-05-19_18-00-28_ait-ads_cpu_full",
+  "results_root": "results",
+  "dataset_name": "ait-ads",
+  "device": "auto",
+  "notes": "Report-ready hierarchical run: keep long memory compact to reduce CPU cost and avoid over-fragmented contexts.",
+  "hidden_size": 128,
+  "short_context_length": 10,
+  "long_memory_length": 8,
+  "landmark_strategy": "recent_distinct",
+  "landmark_time_window_seconds": 86400,
+  "landmark_candidate_limit": 64,
+  "preserve_l1_distance": true,
+  "preserve_dbscan": true
+}

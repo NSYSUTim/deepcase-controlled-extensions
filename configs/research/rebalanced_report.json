@@ -1,0 +1,21 @@
+{
+  "method_name": "rebalanced",
+  "display_name": "Class-Rebalanced DeepCASE",
+  "variant_name": "gru-joint-objective-report",
+  "baseline_config": "configs/deepcase_ait_ads_cpu.json",
+  "baseline_run_id": "2026-05-19_18-00-28_ait-ads_cpu_full",
+  "results_root": "results",
+  "dataset_name": "ait-ads",
+  "device": "auto",
+  "notes": "Report-ready primary method: evaluate improvement on incident-vs-benign triage under the same DeepCASE clustering pipeline.",
+  "hidden_size": 128,
+  "context_length": 10,
+  "loss_type": "focal",
+  "focal_gamma": 2.0,
+  "positive_class_weight": 3.0,
+  "negative_class_weight": 1.0,
+  "reject_low_threshold": 0.25,
+  "reject_high_threshold": 0.70,
+  "preserve_l1_distance": true,
+  "preserve_dbscan": true
+}

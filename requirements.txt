@@ -1,0 +1,15 @@
+# Runtime versions used for the final local verification.
+numpy==2.5.2
+pandas==3.0.5
+pyarrow==25.0.1
+PyYAML==6.0.3
+scikit-learn==1.9.0
+scipy==1.18.1
+torch==2.14.0
+tqdm==4.70.0
+
+# Test dependency
+pytest==9.1.1
+
+# Upstream DeepCASE implementation, pinned to a specific public revision.
+deepcase @ git+https://github.com/Thijsvanede/DeepCASE.git@7d19eaa798da257b83567aeaed78d88bd3574370

@@ -1,0 +1,10 @@
+# Versions used for the validated Windows CPU experiment artifacts.
+numpy==2.5.2
+pandas==3.0.5
+pyarrow==25.0.1
+PyYAML==6.0.3
+scikit-learn==1.9.0
+scipy==1.18.1
+torch==2.14.0
+tqdm==4.70.0
+pytest==9.1.1

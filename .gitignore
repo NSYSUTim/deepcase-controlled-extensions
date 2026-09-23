@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest-cache-files-*/
+test-tmp/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local dependencies
+.venv/
+.venv-*/
+venv/
+.pydeps/
+
+# Data and generated experiment outputs
+data/
+dataset/
+datasets/
+results/
+artifacts/
+checkpoints/
+logs/
+tmp/
+*.pt
+*.pth
+*.save
+*.npy
+*.npz
+*.parquet
+*.zip
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local secrets and configuration overrides
+.env
+.env.*
+!.env.example
+*.local.json

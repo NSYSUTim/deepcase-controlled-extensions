@@ -1,0 +1,89 @@
+data:
+  canonical_parquet: dataset/processed/ait_ads_canonical.parquet
+  candidate_rows: context_selection_experiment/artifacts/candidate_rows_100.npy
+  manifest: dataset/processed/ait_ads_manifest.json
+  timeout_seconds: 86400
+  candidate_caps: [10, 20, 50, 100]
+  selector_budget: 10
+
+design:
+  scenarios:
+    - fox
+    - harrison
+    - russellmitchell
+    - santos
+    - shaw
+    - wardbeck
+    - wheeler
+    - wilson
+  design_scenarios: [fox, russellmitchell]
+  confirmatory_scenarios: [harrison, santos, shaw, wardbeck, wheeler, wilson]
+  seeds: [1729, 2718, 31415]
+  retrieval_random_seeds: [101, 211, 307, 401, 503, 601, 701, 809, 907, 1009, 1103, 1201, 1301, 1409, 1511, 1601, 1709, 1801, 1901, 2003]
+
+gates:
+  displacement_warning: 0.10
+  upper_bound_gain_each: 0.03
+  upper_bound_gain_one: 0.05
+  selector_gain_each: 0.02
+  selector_gain_one: 0.03
+  final_min_positive_scenarios: 4
+  final_max_false_escalation_relative_increase: 0.05
+  bootstrap_iterations: 20000
+  bootstrap_seed: 260904
+
+model:
+  hidden_size: 64
+  epochs: 3
+  steps_per_epoch: 500
+  batch_size: 512
+  learning_rate: 0.003
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+
+gate_b:
+  methods: [last10, oracle10, class_oracle10, association_abs10]
+  decision_upper_bounds: [oracle10, class_oracle10]
+  excluded_capacity_diagnostic: last100
+  excluded_capacity_reason: recurrent_length_and_compute_budget_confound
+  oracle_definition: candidate_incident_then_recency_without_target_label
+  cluster_policy_labels: all_training_scenario_rows
+  workload_match: closest_absolute_then_lower_workload_then_grid_order
+  seed_aggregation: paired_mean
+
+association_teacher:
+  recency_rank_bands:
+    - [1, 10]
+    - [11, 20]
+    - [21, 50]
+    - [51, 100]
+  bernoulli_smoothing: 1.0
+  maximum_absolute_log_odds: 6.0
+  fit_batch_rows: 10000
+  selection_batch_rows: 50000
+
+interpreter:
+  min_samples: 5
+  query_iterations: 0
+  max_multiplicity_for_fit: 5
+  default_eps: 0.10
+  default_threshold: 0.20
+  settings:
+    - [0.10, 0.01]
+    - [0.10, 0.20]
+    - [0.30, 0.05]
+    - [0.30, 0.20]
+    - [0.50, 0.01]
+    - [0.50, 0.10]
+    - [1.00, 0.01]
+
+selector:
+  frequency_smoothing: 1.0
+  association_smoothing: 1.0
+  recency_tau_seconds: 3600
+  fixed_weights:
+    recency: 0.20
+    rarity: 0.20
+    association: 0.45
+    diversity: 0.15
+  duplicate_decay: 0.35
