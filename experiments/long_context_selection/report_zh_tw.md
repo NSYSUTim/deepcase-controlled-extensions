@@ -1,5 +1,7 @@
 # DeepCASE 固定 10 筆資訊感知上下文選擇：完整實驗報告
 
+本文件保留實驗的詳細技術紀錄。最終結果與適用限制見[最終報告摘要](../../docs/final_report_summary.md)。文中 `context_selection_experiment/` 為整理前的路徑，產物未隨專案提供，目前重現條件見[實驗說明](README.md#重現所需條件)。
+
 ## 0. 先說最終結論
 
 原先要驗證的主張是：
@@ -169,7 +171,7 @@ Last10 RNN 與 Last100 RNN 不是同一資源預算：後者有 10 倍時間步�
 
 這張表顯示不能只報 recall：在 harrison、santos、shaw、wilson，baseline 的 false escalation 幾乎為零，selector 卻上升到每千個 53–83 個；wheeler 則從 71 上升到 231。只有 wardbeck 同時提高 recall 且不增加 false escalation。
 
-![AIT 確認實驗的召回增益與錯誤升級代價](figures/ait_confirmation_tradeoff.png)
+原圖檔：`figures/ait_confirmation_tradeoff.png`，未隨專案提供，數值見上表。
 
 ## 7. 失敗後的可行方法探索
 
@@ -302,16 +304,18 @@ Last10 RNN 與 Last100 RNN 不是同一資源預算：後者有 10 倍時間步�
 
 ## 12. 可重現性與證據位置
 
+以下 `artifacts/` 與 `results/` 路徑為原研究產物，未隨專案提供。
+
 - 主實驗事前凍結規範：[`protocol.md`](protocol.md)
-- AIT retrieval audit：[`artifacts/retrieval_audit.md`](artifacts/retrieval_audit.md)
-- 固定 10 上限：[`results/gate_b/gate_b_full_decision.md`](results/gate_b/gate_b_full_decision.md)
-- Selector design gate：[`results/gate_c/gate_c_design_decision.md`](results/gate_c/gate_c_design_decision.md)
-- 六情境確認決定：[`results/confirmation_decision.md`](results/confirmation_decision.md)
-- 失敗後 anchor 開發：[`results/anchor_design_decision.md`](results/anchor_design_decision.md)
+- AIT retrieval audit：`artifacts/retrieval_audit.md`
+- 固定 10 上限：`results/gate_b/gate_b_full_decision.md`
+- Selector design gate：`results/gate_c/gate_c_design_decision.md`
+- 六情境確認決定：`results/confirmation_decision.md`
+- 失敗後 anchor 開發：`results/anchor_design_decision.md`
 - HDFS 事前凍結規範：[`post_failure_external_protocol_v2.md`](post_failure_external_protocol_v2.md)
-- HDFS frozen 數值決定：[`results/hdfs_external/final_decision.md`](results/hdfs_external/final_decision.md)
-- HDFS post-unblinding 效度審計：[`results/hdfs_external/validity_audit.md`](results/hdfs_external/validity_audit.md)
-- 最終 fail-closed machine decision：[`results/overall_decision.json`](results/overall_decision.json)
+- HDFS frozen 數值決定：`results/hdfs_external/final_decision.md`
+- HDFS post-unblinding 效度審計：`results/hdfs_external/validity_audit.md`
+- 最終 fail-closed machine decision：`results/overall_decision.json`
 - 圖表原始碼：[`make_figures.py`](make_figures.py)
 
 主要公開來源：

@@ -1,4 +1,8 @@
-VI. Proposed Method
+# 早期探索報告
+
+本文件保留初步實作與單次執行結果。跨主機、階層式脈絡與基準的排序及切分不同，且使用修正索引錯誤前的 Interpreter，不能將 F1 差異當作最終改善證據。最終比較條件、結果與限制見[最終報告摘要](final_report_summary.md)。
+
+## VI. Proposed Method
 
 This project follows the DeepCASE workflow as the baseline and studies three controlled extensions: cross-host context, hierarchical temporal context, and class-rebalanced triage. The main design principle is to preserve the DeepCASE-style contextual modeling, attention-based representation, L1-distance clustering, and DBSCAN-based interpretation, while modifying one major design factor at a time. This keeps the method design focused: cross_host tests whether related hosts provide useful evidence, hierarchical_context tests whether longer temporal memory helps, and rebalanced tests whether imbalance-aware learning improves incident detection.
 

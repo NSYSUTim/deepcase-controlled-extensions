@@ -1,10 +1,12 @@
 # 在自然警報流與固定偵測規則下評估 DeepCASE 的 Incident-aligned 不平衡學習
 
+本文件保留實驗的詳細技術紀錄。比例統一解讀為「已揭露攻擊：正常」，最終結果與指標定義見[最終報告摘要](../../docs/final_report_summary.md)。文中 `research_experiments/` 為整理前的路徑，目前重現條件見[實驗說明](README.md#重現所需條件)。
+
 ## 摘要
 
 本研究探討：在不關閉既有 noisy detection rules、不刪除重複警報、保留自然事件流與自然測試盛行率的條件下，對 DeepCASE 加入 incident-aligned、imbalance-aware representation learning，能否在極端訓練標籤不平衡下，以不高於原始 DeepCASE 的警報審查量取得較高 incident recall。研究使用公開 AIT Alert Data Set（AIT-ADS）的 2,655,821 筆警報與八個攻擊情境；極端不平衡只施加於訓練階段可見標籤，不改動事件流、驗證集或測試集。本方法在原有 next-event objective 外，對實際送入 Interpreter 分群的 attention-weighted context vector 加入 training-only incident focal objective，並以類別平衡、incident-group 平衡批次訓練。部署時仍使用 DeepCASE 的 Incident／Non-Incident／Reject 三種語意，未重做 Reject。
 
-主要 q=0 確認性實驗為六個 scenario-disjoint folds、三個 seeds、1:1000 負正標籤比。相對 DeepCASE，本方法的情境等權平均 IncidentRecall@matched-workload 差為 +0.00586，平均 workload 差為 −0.00605；95% scenario bootstrap CI 為 [−0.00391, 0.01642]，單尾 exact sign-flip p=0.1875，因此不能宣稱穩健提升。考量原始 DeepCASE 的 attention-query 預設為 100 iterations，本研究在看見 q=100 確認結果前另行凍結 rescue protocol：先以兩個 design scenarios 選法，再只用 group-balanced focal 方法執行六情境、三 seeds 的 q=100 重評估。36/36 個確認紀錄均通過 fail-closed 稽核，但 matched-workload 只有 17/18 配對可行；可用配對的描述性情境等權差為 recall −0.00835、workload −0.00431，且六情境僅 wheeler 小幅正向。因一個 planned pair 不可行，確認性 estimand 不完整，正式 CI／p-value 不計算。替代 window label 與 training-defined ambiguous-rule 診斷也未支持改善。原有 119 筆結果加上新增 q=100 design／確認結果 42 筆，共 161/161 紀錄通過對應稽核。本研究因此不能支持 proposed 優於 DeepCASE；可成立的貢獻是可重現的 label-scarcity／workload 評估、清楚的新穎性邊界、Interpreter 索引錯誤的共同修正，以及揭露此方法在 q=0、q=100 與替代 label 下皆缺乏穩健證據。
+主要 q=0 確認性實驗為六個 scenario-disjoint folds、三個 seeds、已揭露攻擊：正常＝1:1000 的標記比例。相對 DeepCASE，本方法的情境等權平均 IncidentRecall@matched-workload 差為 +0.00586，平均 workload 差為 −0.00605；95% scenario bootstrap CI 為 [−0.00391, 0.01642]，單尾 exact sign-flip p=0.1875，因此不能宣稱穩健提升。考量原始 DeepCASE 的 attention-query 預設為 100 iterations，本研究在看見 q=100 確認結果前另行凍結 rescue protocol：先以兩個 design scenarios 選法，再只用 group-balanced focal 方法執行六情境、三 seeds 的 q=100 重評估。36/36 個確認紀錄均通過 fail-closed 稽核，但 matched-workload 只有 17/18 配對可行；可用配對的描述性情境等權差為 recall −0.00835、workload −0.00431，且六情境僅 wheeler 小幅正向。因一個 planned pair 不可行，確認性 estimand 不完整，正式 CI／p-value 不計算。替代 window label 與 training-defined ambiguous-rule 診斷也未支持改善。原有 119 筆結果加上新增 q=100 design／確認結果 42 筆，共 161/161 紀錄通過對應稽核。本研究因此不能支持 proposed 優於 DeepCASE；可成立的貢獻是可重現的 label-scarcity／workload 評估、清楚的新穎性邊界、Interpreter 索引錯誤的共同修正，以及揭露此方法在 q=0、q=100 與替代 label 下皆缺乏穩健證據。
 
 ## 1. 介紹
 
@@ -155,7 +157,7 @@ AIT-ADS 可由 Zenodo 公開直接下載，包含八個具有變化的 multi-ste
 | Window-label incident prevalence | 66.442% |
 | Strict-past empty contexts | 627 |
 
-AIT-ADS 的 incident 在自然資料中其實是多數類。因此本研究只能主張「對極端 training-label scarcity 的韌性」，不能聲稱已在自然 incident prevalence 為 0.1% 的真實 SOC 上獲證。1:10、1:100、1:1000 是 revealed training labels 的負正比；所有未揭露事件仍參與 next-event learning，validation/test 完整保留。
+AIT-ADS 的 incident 在自然資料中其實是多數類。因此本研究只能主張「對極端 training-label scarcity 的韌性」，不能聲稱已在自然 incident prevalence 為 0.1% 的真實 SOC 上獲證。1:10、1:100、1:1000 是 已揭露攻擊與正常標記的比例；所有未揭露事件仍參與 next-event learning，validation/test 完整保留。
 
 ### 4.3 Label 定義
 
@@ -262,7 +264,7 @@ Rule prior 在 shaw、wardbeck、wheeler、wilson 多數 fold 的 recall 接近 
 
 #### Label-ratio sensitivity
 
-| Revealed 負正比 | 正例／負例 | Seeds | Δ recall | 95% scenario bootstrap CI | Δ workload | Exact p |
+| 已揭露攻擊：正常 | 正例／負例 | Seeds | Δ recall | 95% scenario bootstrap CI | Δ workload | Exact p |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1:10 | 9,090／90,900 | 1 | +0.00023 | [−0.000002, 0.00062] | −0.00386 | 0.2500 |
 | 1:100 | 990／99,000 | 1 | +0.00219 | [0.00000, 0.00639] | −0.00146 | 0.2500 |
@@ -396,7 +398,7 @@ q=0 的平均 proposed recall 高 0.586 percentage points且 workload 稍低，�
 | 主要 label | event_incident | alert 本身語意較直接 |
 | 敏感度 label | window_incident | 測 label construction 依賴性 |
 | 主要 imbalance | revealed labels 1:1000 | 極端 label scarcity；非自然 prevalence |
-| Label budget | 至多 100,000；1:1000 實得 99+99,000 | 保持精確負正比，總數因整除而低於上限 |
+| Label budget | 至多 100,000；1:1000 實得 99+99,000 | 保持精確的攻擊與正常標記比例，總數因整除而低於上限 |
 | Positive reveal | 先跨 incident groups 輪流抽取 | 所有方法公平且涵蓋 groups；可能高估隨機標註情境 |
 | Negative reveal | training negatives 均勻不放回抽取 | 不使用 test 資訊；未模擬 analyst selection bias |
 | Event stream | 全保留 | 不讓抽樣改變 context／workload |

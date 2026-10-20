@@ -1,53 +1,38 @@
-# Information-aware context selection for DeepCASE
+# DeepCASE 長時間脈絡選擇實驗
 
-This directory is an independent, fail-closed experiment.  It does not modify
-the translated DeepCASE sources or the earlier `research_experiments` study.
+本實驗從前 100 筆歷史事件選出 10 筆，與原本只取最近 10 筆的 DeepCASE 比較。模型的輸入數量維持不變，藉此檢查事件選擇本身的效果。
 
-The frozen logic is in `protocol.md`.  The workflow is deliberately gated:
+## 最終結果
 
-1. build strictly-past last-100 candidate row indices;
-2. audit whether last-10 actually displaces labelled incident predecessors;
-3. test `last100` and a non-deployable `oracle10` as model upper bounds;
-4. develop label-free selectors only if the upper-bound gate passes;
-5. freeze the selector and evaluate six complete held-out scenarios;
-6. report success or failure without selecting favourable test subsets.
+AIT-ADS 六個測試情境、三個初始化種子的確認結果中，嚴格自動攻擊召回平均提高 5.18 個百分點，但每千筆正常事件的錯誤自動升級由 17.68 增至 95.50，超過事前設定的相對增幅 5% 上限。
 
-Generated arrays, checkpoints, results, and reports are stored under
-`artifacts/` and `results/`.
+嚴格自動召回只計算自動判對的攻擊，不計 Reject。這與標記不足實驗的送審召回定義不同，不能直接比較增益。完整判讀見[最終報告摘要](../../docs/final_report_summary.md)。
 
-Commands use the repository's local dependency directory on `PYTHONPATH`.
-The staged model runner is `run_gate_b.py`; `analyze_gate_b.py` applies the
-frozen workload match only after all paired runs are complete.  Every run is
-checkpointed and can be resumed without selecting favorable seeds.
+主方法失敗後提出的 `anchor5_assoc5` 固定保留最近 5 筆，再從較早候選選 5 筆。它只在設計情境中探索，沒有新的獨立 AIT-ADS 情境確認。
 
-## Final status
+HDFS 外部檢查使用此事後候選方法，異常序列召回提高 2.73 個百分點。但基準送審率已達 99.91%，88.42% 的最終測試序列與訓練序列有相同事件型別模式，排除重複模式後未通過誤判限制。HDFS 只有序列級標記，不能據此驗證企業告警分流成效。
 
-The complete fail-closed conclusion is in `report_zh_tw.md` and the
-machine-readable decision is `results/overall_decision.json`.
+## 實驗流程
 
-- The frozen AIT confirmatory safe-superiority claim failed. Strict incident
-  recall increased, but false escalations increased far beyond the registered
-  5% limit.
-- `anchor5_assoc5` is post-failure method development, not independent AIT
-  confirmation.
-- The frozen HDFS formula produced a numerical pass, but
-  `results/hdfs_external/validity_audit.json` shows that its safety bound is
-  non-binding and that the benchmark cannot establish an operational SOC
-  safety claim.
+1. 建立嚴格早於目標事件的前 100 筆候選。
+2. 稽核最近 10 筆是否排除已標記攻擊前驅。
+3. 用讀取標記的診斷方法檢查候選中是否存在更好的 10 筆組合，這些方法不能直接部署。
+4. 僅由訓練資料建立選擇規則，再以六個完整測試情境確認召回與誤升級。
 
-## Rebuild the final audit artifacts
+## 檔案導覽
 
-From the repository root in PowerShell:
+| 檔案 | 用途 |
+| --- | --- |
+| [實驗規則](protocol.md)、`config.yaml` | 候選範圍、比較條件與停止規則 |
+| `prepare_candidates.py`、`audit_retrieval.py` | 建立候選與稽核前驅事件 |
+| `run_gate_b.py`、`analyze_confirmation.py` | 配對模型評估與確認結果分析 |
+| `audit_hdfs_validity.py`、`finalize_study.py` | HDFS 適用性與整體結論檢查 |
+| [技術報告](report_zh_tw.md) | 完整方法、結果與限制 |
 
-```powershell
-$env:PYTHONPATH=((Resolve-Path '.pydeps').Path + ';' + (Resolve-Path '.').Path)
-$env:PYTHONDONTWRITEBYTECODE='1'
-& '.\.venv-win\Scripts\python.exe' 'context_selection_experiment\audit_hdfs_validity.py'
-& '.\.venv-win\Scripts\python.exe' 'context_selection_experiment\finalize_study.py'
-& '.\.venv-win\Scripts\python.exe' 'context_selection_experiment\make_figures.py'
-& '.\.venv-win\Scripts\python.exe' -m pytest 'context_selection_experiment\tests' -q
-```
+## 重現所需條件
 
-`finalize_study.py` asserts that the frozen AIT failure, post-failure status,
-HDFS numerical pass, and HDFS operational-invalidity audit have not been
-silently reinterpreted.
+先準備 AIT-ADS 的共同前處理資料，見[訓練標記不足實驗](../imbalance/README.md)。HDFS 資料來源見 [DeepCASE 官方專案](https://github.com/Thijsvanede/DeepCASE)。原始資料、模型與完整結果未隨專案提供。
+
+公開目錄已整理為 `experiments/long_context_selection/`，但 `run_gate_b.py` 及測試仍匯入舊名稱 `research_experiments`、`context_selection_experiment`，`config.yaml` 也保留舊候選檔路徑。完整重跑前須先統一匯入名稱、專案根目錄與資料路徑，目前不能直接照歷史指令執行。
+
+技術報告中的產物路徑是原研究環境的紀錄，不代表相關檔案已包含在此版本中。
